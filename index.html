@@ -1,496 +1,712 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>আমার OT ডায়েরি - Online Version</title>
-    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-    
-    <style>
-        :root {
-            --primary: #1e3a8a;
-            --primary-light: #3b82f6;
-            --bg-color: #f1f5f9;
-            --card-bg: #ffffff;
-            --text-dark: #1e293b;
-            --text-muted: #64748b;
-            --success: #10b981;
-            --danger: #ef4444;
-            --high-ot: #dcfce7;
-            --med-ot: #fef08a;
-            --low-ot: #f8fafc;
-            --border: #e2e8f0;
-            --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
-            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
-            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>আমার OT ডায়েরি</title>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --card: #111827;
+    --card2: #1a2236;
+    --accent: #00d4aa;
+    --accent2: #ff6b35;
+    --accent3: #ffd700;
+    --text: #e8eaf0;
+    --muted: #6b7a99;
+    --border: #1e2d47;
+    --red: #ef4444;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Hind Siliguri', sans-serif;
+    min-height: 100vh;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at 20% 20%, rgba(0,212,170,0.07) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(255,107,53,0.05) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Hind Siliguri', 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background-color: var(--bg-color); color: var(--text-dark); padding-bottom: 40px; }
+  /* ===== PAGES ===== */
+  .page { display: none; position: relative; z-index: 1; }
+  .page.active { display: block; }
 
-        /* Screens */
-        #authScreen, #appScreen, #loadingScreen { display: none; }
-        #loadingScreen { position: fixed; top:0; left:0; width:100%; height:100%; background:var(--primary); color:white; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:9999; }
-        .spinner { border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid white; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom:15px;}
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  /* ===== AUTH PAGE ===== */
+  .auth-wrap {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 20px;
+  }
+  .auth-logo {
+    width: 72px; height: 72px;
+    background: linear-gradient(135deg, var(--accent), #0097a7);
+    border-radius: 24px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px;
+    margin-bottom: 16px;
+    box-shadow: 0 8px 32px rgba(0,212,170,0.3);
+    animation: pulse 3s infinite;
+  }
+  @keyframes pulse {
+    0%,100%{box-shadow:0 8px 32px rgba(0,212,170,0.3);}
+    50%{box-shadow:0 8px 48px rgba(0,212,170,0.5);}
+  }
+  .auth-title {
+    font-family: 'Teko', sans-serif;
+    font-size: 34px;
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 4px; text-align: center;
+  }
+  .auth-sub { color: var(--muted); font-size: 13px; margin-bottom: 32px; text-align: center; }
 
-        /* Auth Screen */
-        .auth-container { min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
-        .auth-card { background: white; width: 100%; max-width: 400px; padding: 30px 20px; border-radius: 20px; box-shadow: var(--shadow-lg); text-align: center; }
-        .auth-card h1 { color: var(--primary); font-size: 24px; margin-bottom: 5px; }
-        .auth-card p { color: var(--text-muted); font-size: 14px; margin-bottom: 25px; }
-        .auth-tabs { display: flex; margin-bottom: 20px; background: var(--bg-color); border-radius: 10px; padding: 5px; }
-        .auth-tab { flex: 1; padding: 10px; font-weight: 600; cursor: pointer; border-radius: 8px; color: var(--text-muted); transition: 0.3s; }
-        .auth-tab.active { background: white; color: var(--primary); box-shadow: var(--shadow-sm); }
-        
-        .input-group { margin-bottom: 16px; text-align: left; }
-        .input-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
-        .input-group input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 16px; outline: none; }
-        .input-group input:focus { border-color: var(--primary-light); }
-        
-        .btn-primary { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 10px; transition: 0.2s; }
-        .btn-primary:active { transform: scale(0.98); }
-        .btn-danger { background: var(--danger); }
-        .error-msg { color: var(--danger); font-size: 13px; margin-top: 10px; min-height: 20px; }
+  .auth-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 28px 24px;
+    width: 100%;
+    max-width: 400px;
+    animation: slideUp 0.4s ease;
+  }
+  @keyframes slideUp { from{opacity:0;transform:translateY(20px);} to{opacity:1;transform:translateY(0);} }
 
-        /* App Header */
-        .header { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; padding: 24px 20px 40px 20px; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; box-shadow: var(--shadow-md); display:flex; justify-content: space-between; align-items: flex-start; }
-        .header h1 { font-size: 22px; font-weight: 700; }
-        .header p { font-size: 14px; opacity: 0.9; }
-        .id-badge { background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 20px; font-size: 12px; margin-top: 5px; display: inline-block; }
-        .logout-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .tab-row {
+    display: grid; grid-template-columns: 1fr 1fr;
+    background: var(--card2);
+    border-radius: 12px; padding: 4px;
+    margin-bottom: 24px;
+  }
+  .tab-btn {
+    padding: 10px;
+    border: none; border-radius: 10px;
+    font-family: 'Hind Siliguri', sans-serif;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer;
+    background: transparent; color: var(--muted);
+    transition: all 0.2s;
+  }
+  .tab-btn.active { background: var(--accent); color: #000; }
 
-        /* Controls */
-        .controls { margin: -25px 20px 20px 20px; background: var(--card-bg); border-radius: 12px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-md); position: relative; z-index: 10; }
-        .controls select { border: 1px solid var(--border); padding: 6px 10px; border-radius: 8px; font-size: 14px; font-weight: 600; color: var(--primary); background: var(--card-bg); outline: none; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 12px; color: var(--muted); font-weight: 500; margin-bottom: 6px; }
+  .form-group input {
+    width: 100%;
+    background: var(--card2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 13px 16px;
+    color: var(--text);
+    font-family: 'Hind Siliguri', sans-serif;
+    font-size: 15px; outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .form-group input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,212,170,0.1); }
 
-        /* Dashboard */
-        .dashboard { padding: 0 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-        .card { background: var(--card-bg); padding: 16px; border-radius: 16px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; justify-content: center; }
-        .card-full { grid-column: span 2; }
-        .card-title { font-size: 13px; color: var(--text-muted); margin-bottom: 4px; font-weight: 600; }
-        .card-value { font-size: 20px; font-weight: 700; color: var(--primary); }
-        .card-value.salary { font-size: 28px; color: var(--success); }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
-        .btn-breakdown { margin-top: 10px; background: rgba(59, 130, 246, 0.1); color: var(--primary-light); border: none; width: 100%; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+  .btn-primary {
+    width: 100%;
+    background: linear-gradient(135deg, var(--accent), #0097a7);
+    border: none; border-radius: 14px;
+    padding: 14px;
+    color: #000; font-family: 'Hind Siliguri', sans-serif;
+    font-size: 16px; font-weight: 700;
+    cursor: pointer; margin-top: 8px;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        /* Day List */
-        .day-list-header { padding: 0 20px; margin-bottom: 12px; font-size: 16px; font-weight: 700; display: flex; justify-content: space-between; }
-        .days-container { padding: 0 20px; display: flex; flex-direction: column; gap: 10px; }
-        .day-row { background: var(--card-bg); padding: 10px 16px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--shadow-sm); }
-        .day-info { display: flex; align-items: center; gap: 12px; width: 100px; }
-        .day-date { font-size: 20px; font-weight: 700; color: var(--primary); }
-        .day-name { font-size: 12px; color: var(--text-muted); font-weight: 500; }
-        .day-input-wrapper input { width: 70px; height: 40px; text-align: center; border: 2px solid var(--border); border-radius: 8px; font-size: 16px; font-weight: 600; outline: none; transition: 0.3s; }
-        .day-running-total { width: 60px; text-align: right; font-size: 14px; font-weight: 600; color: var(--text-muted); }
+  .err-msg { color: var(--red); font-size: 13px; margin-top: 10px; text-align: center; min-height: 20px; }
 
-        /* Modals */
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
-        .modal { background: var(--card-bg); width: 100%; max-width: 400px; border-radius: 20px; padding: 24px; box-shadow: var(--shadow-lg); }
-        
-        /* Bottom Sheet */
-        .bottom-sheet-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 999; opacity: 0; visibility: hidden; transition: 0.3s; }
-        .bottom-sheet { position: fixed; bottom: -100%; left: 0; right: 0; background: var(--card-bg); border-top-left-radius: 24px; border-top-right-radius: 24px; padding: 24px; z-index: 1000; transition: bottom 0.4s; }
-        .bottom-sheet.active { bottom: 0; }
-        .bottom-sheet-overlay.active { opacity: 1; visibility: visible; }
-        .breakdown-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--border); font-size: 15px; }
-        .breakdown-row.total { font-weight: 700; font-size: 18px; color: var(--primary); border: none; padding-top: 16px; }
-    </style>
+  /* ===== MAIN APP ===== */
+  .app-wrap { max-width: 480px; margin: 0 auto; padding: 0 16px 100px; }
+
+  .header { text-align: center; padding: 28px 0 20px; }
+  .header h1 {
+    font-family: 'Teko', sans-serif; font-size: 30px;
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .header-user { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .header-user span { color: var(--accent); font-weight: 600; }
+
+  .top-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 16px;
+  }
+  .btn-logout {
+    background: transparent;
+    border: 1px solid rgba(255,107,53,0.3);
+    border-radius: 10px;
+    color: var(--accent2);
+    font-family: 'Hind Siliguri', sans-serif;
+    font-size: 12px; padding: 6px 12px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-logout:hover { background: rgba(255,107,53,0.1); }
+
+  .profile-badge {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 18px;
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .avatar {
+    width: 48px; height: 48px;
+    background: linear-gradient(135deg, var(--accent), #0097a7);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; font-weight: 700; color: #000;
+    flex-shrink: 0;
+  }
+  .profile-info { flex: 1; }
+  .profile-name { font-size: 16px; font-weight: 600; }
+  .profile-id { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  .month-selector {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .month-nav {
+    width: 38px; height: 38px;
+    background: var(--card2); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--text);
+    font-size: 18px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s; outline: none;
+  }
+  .month-nav:hover { background: var(--accent); border-color: var(--accent); color: #000; }
+  .month-name-display { font-family: 'Teko', sans-serif; font-size: 22px; text-align: center; }
+  .year-display { font-size: 12px; color: var(--muted); text-align: center; }
+
+  .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  .sum-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 16px;
+  }
+  .sum-card.full { grid-column: 1/-1; background: linear-gradient(135deg,#0d2137,#0a1a2e); border-color: rgba(0,212,170,0.25); }
+  .s-lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .s-val { font-family: 'Teko', sans-serif; font-size: 26px; color: var(--accent); }
+  .s-val.orange { color: var(--accent2); }
+  .s-val.gold { font-size: 32px; color: var(--accent3); }
+  .breakdown {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    background: var(--card2); border-radius: 10px;
+    padding: 10px; margin-top: 10px; gap: 6px;
+  }
+  .b-item { text-align: center; }
+  .b-lbl { font-size: 10px; color: var(--muted); margin-bottom: 2px; }
+  .b-val { font-size: 13px; font-weight: 600; }
+
+  .progress-sec {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 16px; margin-bottom: 16px;
+  }
+  .prog-lbl { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 8px; }
+  .prog-lbl span:last-child { color: var(--accent); font-weight: 600; }
+  .prog-bg { background: var(--card2); border-radius: 8px; height: 8px; overflow: hidden; }
+  .prog-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent3));
+    border-radius: 8px; transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .table-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 20px; overflow: hidden; margin-bottom: 16px;
+  }
+  .tbl-header {
+    padding: 14px 18px; border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .tbl-header span { font-size: 12px; color: var(--accent); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+  .btn-reset {
+    background: transparent; border: 1px solid rgba(255,107,53,0.3);
+    border-radius: 8px; color: var(--accent2);
+    font-family: 'Hind Siliguri', sans-serif;
+    font-size: 12px; padding: 5px 10px; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-reset:hover { background: rgba(255,107,53,0.1); }
+  .col-hdr {
+    display: grid; grid-template-columns: 75px 1fr 85px 85px;
+    padding: 9px 14px; background: var(--card2);
+    border-bottom: 1px solid var(--border);
+  }
+  .col-hdr span { font-size: 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; }
+  .col-hdr span:nth-child(3), .col-hdr span:nth-child(4) { text-align: right; }
+
+  .day-row {
+    display: grid; grid-template-columns: 75px 1fr 85px 85px;
+    padding: 9px 14px; border-bottom: 1px solid rgba(30,45,71,0.4);
+    align-items: center; transition: background 0.15s;
+  }
+  .day-row:hover { background: rgba(255,255,255,0.02); }
+  .day-row.has-ot { background: rgba(0,212,170,0.03); }
+  .day-date { font-size: 12px; color: var(--muted); }
+  .day-name { font-size: 13px; font-weight: 500; }
+  .day-name.fri { color: var(--accent2); }
+  .day-name.sat { color: var(--accent3); }
+  .ot-inp {
+    background: var(--card2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 6px 8px;
+    color: var(--text); font-family: 'Hind Siliguri', sans-serif;
+    font-size: 13px; text-align: right; width: 75px; margin-left: auto;
+    outline: none; transition: all 0.2s;
+  }
+  .ot-inp:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(0,212,170,0.12); }
+  .cumul {
+    font-family: 'Teko', sans-serif; font-size: 17px;
+    text-align: right; font-weight: 500;
+  }
+  .cumul.low { color: var(--muted); }
+  .cumul.med { color: var(--accent3); }
+  .cumul.hi { color: var(--accent); }
+
+  /* saving indicator */
+  .save-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent); display: inline-block;
+    margin-left: 6px; opacity: 0; transition: opacity 0.3s;
+  }
+  .save-dot.show { opacity: 1; animation: blink 1s infinite; }
+  @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.2;} }
+
+  .toast {
+    position: fixed; bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--accent); color: #000;
+    padding: 11px 22px; border-radius: 50px;
+    font-size: 13px; font-weight: 700;
+    transition: transform 0.3s; z-index: 999;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  .loading-screen {
+    position: fixed; inset: 0; background: var(--bg);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 100; gap: 16px;
+  }
+  .loading-screen.hide { display: none; }
+  .spinner {
+    width: 40px; height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
 </head>
 <body>
 
-    <!-- Loading Screen -->
-    <div id="loadingScreen" style="display: flex;">
-        <div class="spinner"></div>
-        <h2>দয়া করে অপেক্ষা করুন...</h2>
+<!-- LOADING -->
+<div class="loading-screen" id="loadingScreen">
+  <div style="font-size:40px">⏱️</div>
+  <div class="spinner"></div>
+  <div style="color:var(--muted);font-size:13px">লোড হচ্ছে...</div>
+</div>
+
+<!-- AUTH PAGE -->
+<div class="page" id="authPage">
+  <div class="auth-wrap">
+    <div class="auth-logo">⏱️</div>
+    <div class="auth-title">আমার OT ডায়েরি</div>
+    <div class="auth-sub">ওভারটাইম ও বেতন ট্র্যাকার</div>
+    <div class="auth-card">
+      <div class="tab-row">
+        <button class="tab-btn active" onclick="switchTab('login')">লগইন</button>
+        <button class="tab-btn" onclick="switchTab('register')">রেজিস্ট্রেশন</button>
+      </div>
+
+      <!-- LOGIN -->
+      <div id="loginForm">
+        <div class="form-group">
+          <label>📧 ইমেইল</label>
+          <input type="email" id="loginEmail" placeholder="email@example.com">
+        </div>
+        <div class="form-group">
+          <label>🔒 পাসওয়ার্ড</label>
+          <input type="password" id="loginPass" placeholder="পাসওয়ার্ড">
+        </div>
+        <button class="btn-primary" onclick="doLogin()">লগইন করো</button>
+        <div class="err-msg" id="loginErr"></div>
+      </div>
+
+      <!-- REGISTER -->
+      <div id="registerForm" style="display:none">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>👤 নাম</label>
+            <input type="text" id="regName" placeholder="তোমার নাম">
+          </div>
+          <div class="form-group">
+            <label>🪪 ID No</label>
+            <input type="text" id="regId" placeholder="যেমন: 1234">
+          </div>
+          <div class="form-group">
+            <label>💰 বেসিক (৳)</label>
+            <input type="number" id="regBasic" placeholder="14549">
+          </div>
+          <div class="form-group">
+            <label>🏷️ ভাতা (৳)</label>
+            <input type="number" id="regAllowance" placeholder="725">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>⚡ OT রেট (৳/ঘন্টা)</label>
+          <input type="number" id="regRate" placeholder="77.56" step="0.01">
+        </div>
+        <div class="form-group">
+          <label>📧 ইমেইল</label>
+          <input type="email" id="regEmail" placeholder="email@example.com">
+        </div>
+        <div class="form-group">
+          <label>🔒 পাসওয়ার্ড</label>
+          <input type="password" id="regPass" placeholder="কমপক্ষে ৬ অক্ষর">
+        </div>
+        <button class="btn-primary" onclick="doRegister()">অ্যাকাউন্ট তৈরি করো</button>
+        <div class="err-msg" id="regErr"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP PAGE -->
+<div class="page" id="appPage">
+  <div class="app-wrap">
+    <div class="header">
+      <div class="top-bar">
+        <div style="font-size:22px;font-family:'Teko',sans-serif;color:var(--accent)">⏱️ OT ডায়েরি <span class="save-dot" id="saveDot"></span></div>
+        <button class="btn-logout" onclick="doLogout()">লগআউট</button>
+      </div>
     </div>
 
-    <!-- Auth Screen (Login/Signup) -->
-    <div id="authScreen" class="auth-container">
-        <div class="auth-card">
-            <h1>আমার OT ডায়েরি</h1>
-            <p>অনলাইন ডাটাবেজ সিস্টেম</p>
-            
-            <div class="auth-tabs">
-                <div class="auth-tab active" id="tabLogin" onclick="window.switchTab('login')">লগইন</div>
-                <div class="auth-tab" id="tabSignup" onclick="window.switchTab('signup')">নতুন অ্যাকাউন্ট</div>
-            </div>
-
-            <div class="input-group">
-                <label>আপনার ID No (আইডি নম্বর)</label>
-                <input type="text" id="authId" placeholder="উদাঃ 12345">
-            </div>
-            <div class="input-group">
-                <label>পাসওয়ার্ড (Password)</label>
-                <input type="password" id="authPass" placeholder="কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড">
-            </div>
-
-            <button class="btn-primary" id="authBtn" onclick="window.handleAuth()">লগইন করুন</button>
-            <div class="error-msg" id="authError"></div>
-        </div>
+    <div class="profile-badge">
+      <div class="avatar" id="avatarLetter">?</div>
+      <div class="profile-info">
+        <div class="profile-name" id="profileName">—</div>
+        <div class="profile-id">ID: <span id="profileId">—</span> &nbsp;|&nbsp; রেট: ৳<span id="profileRate">—</span>/ঘন্টা</div>
+      </div>
     </div>
 
-    <!-- Main App Screen -->
-    <div id="appScreen">
-        <header class="header">
-            <div>
-                <h1>আমার OT ডায়েরি</h1>
-                <p id="greetingName">হ্যালো!</p>
-                <div class="id-badge">ID: <span id="displayIdNo">----</span></div>
-            </div>
-            <button class="logout-btn" onclick="window.logout()">Logout</button>
-        </header>
-
-        <div class="controls">
-            <div style="display: flex; gap: 8px;">
-                <select id="monthSelect" onchange="window.changeDate()"></select>
-                <select id="yearSelect" onchange="window.changeDate()"></select>
-            </div>
-            <button class="logout-btn" style="background:var(--primary-light)" onclick="window.openSettings()">প্রোফাইল</button>
-        </div>
-
-        <div class="dashboard">
-            <div class="card card-full">
-                <div class="card-title">সর্বমোট বেতন (Final Salary)</div>
-                <div class="card-value salary" id="displayFinalSalary">৳ 0.00</div>
-                <button class="btn-breakdown" onclick="window.openBreakdown()">হিসাব দেখুন (Breakdown)</button>
-            </div>
-            <div class="card">
-                <div class="card-title">মোট OT (Total OT)</div>
-                <div class="card-value" id="displayTotalOT">0 <span style="font-size: 14px; color:var(--text-muted)">ঘণ্টা</span></div>
-            </div>
-            <div class="card">
-                <div class="card-title">OT আয় (OT Earnings)</div>
-                <div class="card-value" id="displayOTEarnings" style="color:var(--text-dark)">৳ 0.00</div>
-                <div style="font-size: 11px; color: var(--text-muted); margin-top: 5px;" id="otRateDisplay">Rate: 0.00/hr</div>
-            </div>
-        </div>
-
-        <div class="day-list-header">
-            <span>দৈনিক এন্ট্রি</span>
-            <span style="font-size: 12px; color: var(--text-muted);">রানিং টোটাল</span>
-        </div>
-
-        <div class="days-container" id="daysContainer"></div>
+    <div class="month-selector">
+      <button class="month-nav" onclick="changeMonth(-1)">‹</button>
+      <div>
+        <div class="month-name-display" id="monthNameDisp">—</div>
+        <div class="year-display" id="yearDisp">—</div>
+      </div>
+      <button class="month-nav" onclick="changeMonth(1)">›</button>
     </div>
 
-    <!-- Profile Setup Modal -->
-    <div class="modal-overlay" id="setupModal">
-        <div class="modal">
-            <h2 style="color:var(--primary); margin-bottom:10px;">আপনার প্রোফাইল</h2>
-            
-            <div class="input-group">
-                <label>আপনার নাম (Name)</label>
-                <input type="text" id="setupName" placeholder="উদাঃ রহিম ইসলাম">
-            </div>
-            <div class="input-group">
-                <label>মূল বেতন (Basic Salary)</label>
-                <input type="number" id="setupBasic" placeholder="উদাঃ 14549">
-            </div>
-            <div class="input-group">
-                <label>ভাতা (Allowance)</label>
-                <input type="number" id="setupAllowance" placeholder="উদাঃ 725">
-            </div>
-            <div class="input-group">
-                <label>OT রেট/ঘণ্টা (OT Rate)</label>
-                <input type="number" id="setupRate" placeholder="উদাঃ 77.56" step="0.01">
-            </div>
-            <button class="btn-primary" onclick="window.saveProfile()">সংরক্ষণ করুন (Save)</button>
-        </div>
+    <div class="progress-sec">
+      <div class="prog-lbl"><span>মাসিক OT অগ্রগতি</span><span id="progTxt">০ ঘন্টা</span></div>
+      <div class="prog-bg"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
     </div>
 
-    <!-- Breakdown Bottom Sheet -->
-    <div class="bottom-sheet-overlay" id="breakdownOverlay" onclick="window.closeBreakdown()"></div>
-    <div class="bottom-sheet" id="breakdownSheet">
-        <div style="width: 40px; height: 5px; background: var(--border); border-radius: 10px; margin: 0 auto 20px auto;"></div>
-        <h3 style="margin-bottom: 20px; color: var(--primary);">বেতনের পূর্ণাঙ্গ হিসাব</h3>
-        <div class="breakdown-row"><span>মূল বেতন (Basic)</span><span id="bdBasic">৳ 0.00</span></div>
-        <div class="breakdown-row"><span>ভাতা (Allowance)</span><span id="bdAllowance">৳ 0.00</span></div>
-        <div class="breakdown-row" style="color: var(--text-muted); font-size: 13px;">
-            <span><span id="bdOTHours">0</span> ঘণ্টা × <span id="bdOTRate">0.00</span> টাকা</span>
+    <div class="summary-grid">
+      <div class="sum-card">
+        <div class="s-lbl">মোট OT ঘন্টা</div>
+        <div class="s-val" id="totalHrs">০</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">এই মাসে</div>
+      </div>
+      <div class="sum-card">
+        <div class="s-lbl">OT উপার্জন</div>
+        <div class="s-val orange" id="otEarn">৳ ০</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">অতিরিক্ত আয়</div>
+      </div>
+      <div class="sum-card full">
+        <div class="s-lbl">মোট বেতন এই মাসে</div>
+        <div class="s-val gold" id="totalSal">৳ —</div>
+        <div class="breakdown">
+          <div class="b-item"><div class="b-lbl">বেসিক</div><div class="b-val" id="bBasic">—</div></div>
+          <div class="b-item"><div class="b-lbl">ভাতা</div><div class="b-val" id="bAllow">—</div></div>
+          <div class="b-item"><div class="b-lbl">OT</div><div class="b-val" id="bOt">—</div></div>
         </div>
-        <div class="breakdown-row"><span>OT আয়</span><span id="bdOTEarnings">৳ 0.00</span></div>
-        <div class="breakdown-row total"><span>সর্বমোট (Total)</span><span id="bdTotal">৳ 0.00</span></div>
+      </div>
     </div>
 
-    <!-- Firebase SDK Setup -->
-    <script type="module">
-        // Import Firebase Functions via CDN
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    <div class="table-card">
+      <div class="tbl-header">
+        <span>দৈনিক OT লগ</span>
+        <button class="btn-reset" onclick="resetMonth()">মাস রিসেট</button>
+      </div>
+      <div class="col-hdr">
+        <span>তারিখ</span><span>বার</span>
+        <span style="text-align:right">OT ঘন্টা</span>
+        <span style="text-align:right">মোট</span>
+      </div>
+      <div id="dayRows"></div>
+    </div>
+  </div>
+</div>
 
-        // আপনার নতুন প্রজেক্টের Firebase কনফিগারেশন
-        const firebaseConfig = {
-            apiKey: "AIzaSyCk_dUOQL9nckWCxExTab6y4GHgiKBeIyA",
-            authDomain: "ot-tajul.firebaseapp.com",
-            databaseURL: "https://ot-tajul-default-rtdb.firebaseio.com",
-            projectId: "ot-tajul",
-            storageBucket: "ot-tajul.firebasestorage.app",
-            messagingSenderId: "281838100169",
-            appId: "1:281838100169:web:b1a1fe8076812f40abb718"
-        };
+<div class="toast" id="toast">✅ সেভ হয়েছে!</div>
 
-        // Initialize Firebase Apps & Services
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+<!-- Firebase SDKs -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getDatabase, ref, set, get, update, onValue, remove }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-        // Global State
-        let currentUserId = null;
-        let profileData = null;
-        let otData = {};
-        
-        const bnMonths =['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
-        const bnDays =['রবি', 'সোম', 'মঙ্গল', 'বুধ', 'বৃহস্পতি', 'শুক্র', 'শনি'];
-        
-        let currentMonth = new Date().getMonth();
-        let currentYear = new Date().getFullYear();
-        let authMode = 'login'; 
+const firebaseConfig = {
+  apiKey: "AIzaSyCQniSZqOQCPxJ-8nqQriKDxa9k5x2oxLA",
+  authDomain: "ot-diary-20126.firebaseapp.com",
+  databaseURL: "https://ot-diary-20126-default-rtdb.firebaseio.com",
+  projectId: "ot-diary-20126",
+  storageBucket: "ot-diary-20126.firebasestorage.app",
+  messagingSenderId: "190068621192",
+  appId: "1:190068621192:web:0f5cd0ecd3994bcef8043d"
+};
 
-        // --- AUTH LOGIC ---
-        window.switchTab = (mode) => {
-            authMode = mode;
-            document.getElementById('tabLogin').classList.toggle('active', mode === 'login');
-            document.getElementById('tabSignup').classList.toggle('active', mode === 'signup');
-            document.getElementById('authBtn').innerText = mode === 'login' ? 'লগইন করুন' : 'অ্যাকাউন্ট তৈরি করুন';
-            document.getElementById('authError').innerText = '';
-        };
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
 
-        window.handleAuth = async () => {
-            const idNo = document.getElementById('authId').value.trim();
-            const pass = document.getElementById('authPass').value.trim();
-            const errorDiv = document.getElementById('authError');
-            
-            if(!idNo || !pass) return errorDiv.innerText = "দয়া করে ID এবং Password দিন!";
-            if(pass.length < 6) return errorDiv.innerText = "পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে!";
+const bnMonths = ['জানুয়ারি','ফেব্রুয়ারি','মার্চ','এপ্রিল','মে','জুন','জুলাই','আগস্ট','সেপ্টেম্বর','অক্টোবর','নভেম্বর','ডিসেম্বর'];
+const bnDays = ['রবিবার','সোমবার','মঙ্গলবার','বুধবার','বৃহস্পতিবার','শুক্রবার','শনিবার'];
 
-            // Convert ID to a fake email for Firebase Auth
-            const email = `${idNo}@otdiary.app`;
-            
-            try {
-                errorDiv.innerText = "অপেক্ষা করুন...";
-                if(authMode === 'login') {
-                    await signInWithEmailAndPassword(auth, email, pass);
-                } else {
-                    await createUserWithEmailAndPassword(auth, email, pass);
-                }
-            } catch (error) {
-                console.error(error);
-                if(error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') {
-                    errorDiv.innerText = "ভুল ID বা Password!";
-                } else if(error.code === 'auth/email-already-in-use') {
-                    errorDiv.innerText = "এই ID দিয়ে আগেই অ্যাকাউন্ট খোলা হয়েছে!";
-                } else {
-                    errorDiv.innerText = "একটি সমস্যা হয়েছে। আবার চেষ্টা করুন। (" + error.code + ")";
-                }
-            }
-        };
+let currentUser = null, userProfile = null;
+let currentMonth = new Date().getMonth();
+let currentYear = new Date().getFullYear();
+let otData = {};
+let saveTimer = null;
+let unsubscribe = null;
 
-        window.logout = () => {
-            signOut(auth);
-        };
+// ===== AUTH STATE =====
+onAuthStateChanged(auth, async (user) => {
+  document.getElementById('loadingScreen').classList.add('hide');
+  if (user) {
+    currentUser = user;
+    const snap = await get(ref(db, `users/${user.uid}/profile`));
+    if (snap.exists()) {
+      userProfile = snap.val();
+      showApp();
+    } else {
+      showPage('authPage');
+    }
+  } else {
+    showPage('authPage');
+  }
+});
 
-        // --- AUTH STATE LISTENER ---
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                currentUserId = user.uid;
-                document.getElementById('authScreen').style.display = 'none';
-                document.getElementById('loadingScreen').style.display = 'flex';
-                
-                try {
-                    // Fetch User Profile from Firestore
-                    const docRef = doc(db, "users", currentUserId);
-                    const docSnap = await getDoc(docRef);
-                    
-                    if (docSnap.exists()) {
-                        profileData = docSnap.data();
-                        initApp();
-                    } else {
-                        // New User -> Show Setup Modal
-                        document.getElementById('loadingScreen').style.display = 'none';
-                        document.getElementById('appScreen').style.display = 'block';
-                        document.getElementById('setupModal').style.display = 'flex';
-                    }
-                } catch (error) {
-                    console.error("Firestore Error:", error);
-                    alert("ডাটাবেজ এক্সেস করতে সমস্যা হচ্ছে। ফায়ারবেস ডাটাবেজ Rules চেক করুন!");
-                    signOut(auth);
-                }
-            } else {
-                currentUserId = null;
-                profileData = null;
-                document.getElementById('loadingScreen').style.display = 'none';
-                document.getElementById('appScreen').style.display = 'none';
-                document.getElementById('authScreen').style.display = 'flex';
-            }
-        });
+// ===== PAGES =====
+window.showPage = function(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+window.switchTab = function(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', (i===0&&tab==='login')||(i===1&&tab==='register')));
+  document.getElementById('loginForm').style.display = tab==='login'?'block':'none';
+  document.getElementById('registerForm').style.display = tab==='register'?'block':'none';
+  document.getElementById('loginErr').textContent = '';
+  document.getElementById('regErr').textContent = '';
+}
 
-        // --- APP LOGIC ---
-        function initSelectors() {
-            const mSelect = document.getElementById('monthSelect');
-            const ySelect = document.getElementById('yearSelect');
-            mSelect.innerHTML = ''; ySelect.innerHTML = '';
-            
-            bnMonths.forEach((m, i) => mSelect.options.add(new Option(m, i)));
-            mSelect.value = currentMonth;
+// ===== REGISTER =====
+window.doRegister = async function() {
+  const name = document.getElementById('regName').value.trim();
+  const idNo = document.getElementById('regId').value.trim();
+  const basic = parseFloat(document.getElementById('regBasic').value) || 0;
+  const allowance = parseFloat(document.getElementById('regAllowance').value) || 0;
+  const rate = parseFloat(document.getElementById('regRate').value) || 0;
+  const email = document.getElementById('regEmail').value.trim();
+  const pass = document.getElementById('regPass').value;
+  const errEl = document.getElementById('regErr');
 
-            for(let y = currentYear - 2; y <= currentYear + 2; y++) ySelect.options.add(new Option(y, y));
-            ySelect.value = currentYear;
-        }
+  if (!name || !idNo || !email || !pass) { errEl.textContent = 'সব তথ্য পূরণ করো'; return; }
+  if (pass.length < 6) { errEl.textContent = 'পাসওয়ার্ড কমপক্ষে ৬ অক্ষর'; return; }
 
-        async function initApp() {
-            document.getElementById('loadingScreen').style.display = 'none';
-            document.getElementById('appScreen').style.display = 'block';
-            
-            const rawId = auth.currentUser.email.split('@')[0];
-            document.getElementById('greetingName').innerText = `হ্যালো, ${profileData.name}!`;
-            document.getElementById('displayIdNo').innerText = rawId;
-            document.getElementById('otRateDisplay').innerText = `Rate: ${profileData.rate}/hr`;
-            
-            initSelectors();
-            await loadMonthData();
-        }
+  const btn = document.querySelector('#registerForm .btn-primary');
+  btn.disabled = true; btn.textContent = 'তৈরি হচ্ছে...';
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+    await set(ref(db, `users/${cred.user.uid}/profile`), { name, idNo, basic, allowance, rate, email });
+    userProfile = { name, idNo, basic, allowance, rate };
+    currentUser = cred.user;
+    showApp();
+  } catch(e) {
+    errEl.textContent = e.code === 'auth/email-already-in-use' ? 'এই ইমেইল আগেই ব্যবহৃত' : e.message;
+  }
+  btn.disabled = false; btn.textContent = 'অ্যাকাউন্ট তৈরি করো';
+}
 
-        window.changeDate = async () => {
-            currentMonth = parseInt(document.getElementById('monthSelect').value);
-            currentYear = parseInt(document.getElementById('yearSelect').value);
-            await loadMonthData();
-        };
+// ===== LOGIN =====
+window.doLogin = async function() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  const errEl = document.getElementById('loginErr');
+  if (!email || !pass) { errEl.textContent = 'ইমেইল ও পাসওয়ার্ড দাও'; return; }
 
-        async function loadMonthData() {
-            const key = `${currentYear}-${currentMonth}`;
-            
-            // Fetch this month's OT from Firestore
-            const otRef = doc(db, "users", currentUserId, "otData", key);
-            const otSnap = await getDoc(otRef);
-            
-            if(otSnap.exists()) {
-                otData[key] = otSnap.data();
-            } else {
-                otData[key] = {};
-            }
-            
-            renderCalendar(key);
-            calculateTotals(key);
-        }
+  const btn = document.querySelector('#loginForm .btn-primary');
+  btn.disabled = true; btn.textContent = 'লগইন হচ্ছে...';
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+  } catch(e) {
+    errEl.textContent = 'ইমেইল বা পাসওয়ার্ড ভুল';
+    btn.disabled = false; btn.textContent = 'লগইন করো';
+  }
+}
 
-        function renderCalendar(monthKey) {
-            const container = document.getElementById('daysContainer');
-            container.innerHTML = '';
-            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-            
-            for(let i = 1; i <= daysInMonth; i++) {
-                const dayOfWeek = new Date(currentYear, currentMonth, i).getDay();
-                const savedValue = otData[monthKey][i] !== undefined ? otData[monthKey][i] : '';
-                
-                let bgClass = 'var(--low-ot)';
-                if(savedValue >= 4) bgClass = 'var(--high-ot)';
-                else if(savedValue >= 2) bgClass = 'var(--med-ot)';
+// ===== LOGOUT =====
+window.doLogout = async function() {
+  if (unsubscribe) unsubscribe();
+  await signOut(auth);
+  otData = {};
+  showPage('authPage');
+}
 
-                const row = document.createElement('div');
-                row.className = 'day-row';
-                row.innerHTML = `
-                    <div class="day-info">
-                        <span class="day-date">${i}</span>
-                        <span class="day-name">${bnDays[dayOfWeek]}</span>
-                    </div>
-                    <div class="day-input-wrapper">
-                        <input type="number" min="0" max="24" step="0.5" value="${savedValue}" 
-                               style="background-color: ${bgClass};"
-                               oninput="window.handleInput(this, ${i})">
-                    </div>
-                    <div class="day-running-total" id="rt-${i}">-</div>
-                `;
-                container.appendChild(row);
-            }
-        }
+// ===== SHOW APP =====
+function showApp() {
+  showPage('appPage');
+  const p = userProfile;
+  document.getElementById('avatarLetter').textContent = p.name ? p.name[0].toUpperCase() : '?';
+  document.getElementById('profileName').textContent = p.name || '—';
+  document.getElementById('profileId').textContent = p.idNo || '—';
+  document.getElementById('profileRate').textContent = p.rate || '—';
+  loadMonthData();
+}
 
-        window.handleInput = async (el, day) => {
-            const val = parseFloat(el.value);
-            const key = `${currentYear}-${currentMonth}`;
+// ===== MONTH =====
+window.changeMonth = function(dir) {
+  currentMonth += dir;
+  if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+  if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+  if (unsubscribe) unsubscribe();
+  loadMonthData();
+}
 
-            if (val >= 4) el.style.backgroundColor = 'var(--high-ot)';
-            else if (val >= 2) el.style.backgroundColor = 'var(--med-ot)';
-            else el.style.backgroundColor = 'var(--low-ot)';
+function monthKey() { return `${currentYear}_${String(currentMonth+1).padStart(2,'0')}`; }
 
-            if(isNaN(val)) delete otData[key][day];
-            else otData[key][day] = val;
+function loadMonthData() {
+  document.getElementById('monthNameDisp').textContent = bnMonths[currentMonth];
+  document.getElementById('yearDisp').textContent = currentYear + ' সাল';
+  const path = `users/${currentUser.uid}/ot/${monthKey()}`;
+  unsubscribe = onValue(ref(db, path), snap => {
+    otData = snap.exists() ? snap.val() : {};
+    renderMonth();
+  });
+}
 
-            calculateTotals(key);
+function daysInMonth(m, y) { return new Date(y, m+1, 0).getDate(); }
 
-            // Debounced Save to Firestore
-            clearTimeout(window.saveTimeout);
-            window.saveTimeout = setTimeout(async () => {
-                try {
-                    const docRef = doc(db, "users", currentUserId, "otData", key);
-                    await setDoc(docRef, otData[key]);
-                } catch(e) { console.error("Error saving data: ", e); }
-            }, 1000);
-        };
+function renderMonth() {
+  const days = daysInMonth(currentMonth, currentYear);
+  const container = document.getElementById('dayRows');
+  container.innerHTML = '';
+  for (let d = 1; d <= days; d++) {
+    const dow = new Date(currentYear, currentMonth, d).getDay();
+    const isFri = dow === 5, isSat = dow === 6;
+    const val = otData[d] || '';
+    const row = document.createElement('div');
+    row.className = 'day-row' + (val ? ' has-ot' : '');
+    row.id = `row-${d}`;
+    row.innerHTML = `
+      <div class="day-date">${d} ${bnMonths[currentMonth].slice(0,3)}</div>
+      <div class="day-name ${isFri?'fri':isSat?'sat':''}">${bnDays[dow]}</div>
+      <input class="ot-inp" type="number" min="0" max="24" step="0.5"
+        placeholder="০" value="${val}"
+        oninput="liveOT(${d}, this.value)"
+        onchange="saveOT(${d}, this.value)">
+      <div class="cumul low" id="cum-${d}">—</div>
+    `;
+    container.appendChild(row);
+  }
+  updateSummary();
+}
 
-        function calculateTotals(key) {
-            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-            let runningTotal = 0;
+window.liveOT = function(day, val) {
+  const v = parseFloat(val) || 0;
+  if (v === 0) delete otData[day]; else otData[day] = v;
+  updateSummary();
+  document.getElementById(`row-${day}`).classList.toggle('has-ot', v > 0);
+}
 
-            for(let i = 1; i <= daysInMonth; i++) {
-                const val = parseFloat(otData[key][i]) || 0;
-                runningTotal += val;
-                const rtDisplay = document.getElementById(`rt-${i}`);
-                if(rtDisplay) rtDisplay.innerText = runningTotal > 0 ? `${runningTotal}h` : '-';
-            }
+window.saveOT = function(day, val) {
+  const v = parseFloat(val) || 0;
+  if (v === 0) delete otData[day]; else otData[day] = v;
+  updateSummary();
+  // Debounce save
+  clearTimeout(saveTimer);
+  showSaveDot(true);
+  saveTimer = setTimeout(async () => {
+    const path = `users/${currentUser.uid}/ot/${monthKey()}/${day}`;
+    if (v === 0) await remove(ref(db, path));
+    else await set(ref(db, path), v);
+    showSaveDot(false);
+    showToast('☁️ Firebase এ সেভ হয়েছে!');
+  }, 800);
+}
 
-            const earnings = runningTotal * profileData.rate;
-            const finalSal = earnings + profileData.basic + profileData.allowance;
+window.resetMonth = async function() {
+  if (!confirm('এই মাসের সব OT ডেটা মুছবো?')) return;
+  await remove(ref(db, `users/${currentUser.uid}/ot/${monthKey()}`));
+  otData = {};
+  renderMonth();
+}
 
-            document.getElementById('displayTotalOT').innerHTML = `${runningTotal} <span style="font-size: 14px; color:var(--text-muted)">ঘণ্টা</span>`;
-            document.getElementById('displayOTEarnings').innerText = `৳ ${earnings.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
-            document.getElementById('displayFinalSalary').innerText = `৳ ${finalSal.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+function updateSummary() {
+  const days = daysInMonth(currentMonth, currentYear);
+  const rate = parseFloat(userProfile?.rate) || 0;
+  const basic = parseFloat(userProfile?.basic) || 0;
+  const allowance = parseFloat(userProfile?.allowance) || 0;
+  let cum = 0;
+  for (let d = 1; d <= days; d++) {
+    const v = parseFloat(otData[d]) || 0;
+    cum += v;
+    const el = document.getElementById(`cum-${d}`);
+    if (el) {
+      if (cum === 0) { el.textContent = '—'; el.className = 'cumul low'; }
+      else { el.textContent = cum; el.className = 'cumul ' + (cum < 20?'low':cum<50?'med':'hi'); }
+    }
+  }
+  const otEarn = cum * rate;
+  const total = basic + allowance + otEarn;
+  document.getElementById('totalHrs').textContent = cum || '০';
+  document.getElementById('otEarn').textContent = '৳ ' + otEarn.toLocaleString('en-IN',{maximumFractionDigits:2});
+  document.getElementById('totalSal').textContent = rate>0 ? '৳ '+total.toLocaleString('en-IN',{maximumFractionDigits:2}) : '৳ —';
+  document.getElementById('bBasic').textContent = basic ? '৳'+basic.toLocaleString('en-IN') : '—';
+  document.getElementById('bAllow').textContent = allowance ? '৳'+allowance.toLocaleString('en-IN') : '—';
+  document.getElementById('bOt').textContent = otEarn ? '৳'+otEarn.toLocaleString('en-IN',{maximumFractionDigits:2}) : '—';
+  const pct = Math.min((cum/120)*100, 100);
+  document.getElementById('progFill').style.width = pct + '%';
+  document.getElementById('progTxt').textContent = cum + ' ঘন্টা';
+}
 
-            document.getElementById('bdBasic').innerText = `৳ ${profileData.basic}`;
-            document.getElementById('bdAllowance').innerText = `৳ ${profileData.allowance}`;
-            document.getElementById('bdOTHours').innerText = runningTotal;
-            document.getElementById('bdOTRate').innerText = profileData.rate;
-            document.getElementById('bdOTEarnings').innerText = `৳ ${earnings.toFixed(2)}`;
-            document.getElementById('bdTotal').innerText = `৳ ${finalSal.toFixed(2)}`;
-        }
+function showSaveDot(show) {
+  document.getElementById('saveDot').classList.toggle('show', show);
+}
 
-        // --- PROFILE SETTINGS ---
-        window.saveProfile = async () => {
-            const name = document.getElementById('setupName').value || 'ইউজার';
-            const basic = parseFloat(document.getElementById('setupBasic').value) || 0;
-            const allowance = parseFloat(document.getElementById('setupAllowance').value) || 0;
-            const rate = parseFloat(document.getElementById('setupRate').value) || 0;
-
-            profileData = { name, basic, allowance, rate };
-            
-            try {
-                document.getElementById('setupModal').style.display = 'none';
-                document.getElementById('loadingScreen').style.display = 'flex';
-                
-                // Save to Firestore
-                await setDoc(doc(db, "users", currentUserId), profileData);
-                
-                initApp();
-            } catch(e) {
-                alert("প্রোফাইল সেভ করতে সমস্যা হয়েছে! ফায়ারবেস Rules ঠিক আছে কিনা চেক করুন।");
-                console.error(e);
-            }
-        };
-
-        window.openSettings = () => {
-            if(profileData) {
-                document.getElementById('setupName').value = profileData.name;
-                document.getElementById('setupBasic').value = profileData.basic;
-                document.getElementById('setupAllowance').value = profileData.allowance;
-                document.getElementById('setupRate').value = profileData.rate;
-            }
-            document.getElementById('setupModal').style.display = 'flex';
-        };
-
-        // UI toggles
-        window.openBreakdown = () => { document.getElementById('breakdownSheet').classList.add('active'); document.getElementById('breakdownOverlay').classList.add('active'); };
-        window.closeBreakdown = () => { document.getElementById('breakdownSheet').classList.remove('active'); document.getElementById('breakdownOverlay').classList.remove('active'); };
-    </script>
+let toastTimer;
+function showToast(msg = '✅ সেভ হয়েছে!') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+</script>
 </body>
 </html>
