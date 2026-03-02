@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>আমার OT ডায়েরি - Online Version</title>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --primary-light: #3b82f6;
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --high-ot: #dcfce7;
+            --med-ot: #fef08a;
+            --low-ot: #f8fafc;
+            --border: #e2e8f0;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Hind Siliguri', 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-color); color: var(--text-dark); padding-bottom: 40px; }
+
+        /* Screens */
+        #authScreen, #appScreen, #loadingScreen { display: none; }
+        #loadingScreen { position: fixed; top:0; left:0; width:100%; height:100%; background:var(--primary); color:white; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:9999; }
+        .spinner { border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid white; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom:15px;}
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Auth Screen */
+        .auth-container { min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        .auth-card { background: white; width: 100%; max-width: 400px; padding: 30px 20px; border-radius: 20px; box-shadow: var(--shadow-lg); text-align: center; }
+        .auth-card h1 { color: var(--primary); font-size: 24px; margin-bottom: 5px; }
+        .auth-card p { color: var(--text-muted); font-size: 14px; margin-bottom: 25px; }
+        .auth-tabs { display: flex; margin-bottom: 20px; background: var(--bg-color); border-radius: 10px; padding: 5px; }
+        .auth-tab { flex: 1; padding: 10px; font-weight: 600; cursor: pointer; border-radius: 8px; color: var(--text-muted); transition: 0.3s; }
+        .auth-tab.active { background: white; color: var(--primary); box-shadow: var(--shadow-sm); }
+        
+        .input-group { margin-bottom: 16px; text-align: left; }
+        .input-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+        .input-group input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 16px; outline: none; }
+        .input-group input:focus { border-color: var(--primary-light); }
+        
+        .btn-primary { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 10px; transition: 0.2s; }
+        .btn-primary:active { transform: scale(0.98); }
+        .btn-danger { background: var(--danger); }
+        .error-msg { color: var(--danger); font-size: 13px; margin-top: 10px; min-height: 20px; }
+
+        /* App Header */
+        .header { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; padding: 24px 20px 40px 20px; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; box-shadow: var(--shadow-md); display:flex; justify-content: space-between; align-items: flex-start; }
+        .header h1 { font-size: 22px; font-weight: 700; }
+        .header p { font-size: 14px; opacity: 0.9; }
+        .id-badge { background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 20px; font-size: 12px; margin-top: 5px; display: inline-block; }
+        .logout-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+
+        /* Controls */
+        .controls { margin: -25px 20px 20px 20px; background: var(--card-bg); border-radius: 12px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-md); position: relative; z-index: 10; }
+        .controls select { border: 1px solid var(--border); padding: 6px 10px; border-radius: 8px; font-size: 14px; font-weight: 600; color: var(--primary); background: var(--card-bg); outline: none; }
+
+        /* Dashboard */
+        .dashboard { padding: 0 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .card { background: var(--card-bg); padding: 16px; border-radius: 16px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; justify-content: center; }
+        .card-full { grid-column: span 2; }
+        .card-title { font-size: 13px; color: var(--text-muted); margin-bottom: 4px; font-weight: 600; }
+        .card-value { font-size: 20px; font-weight: 700; color: var(--primary); }
+        .card-value.salary { font-size: 28px; color: var(--success); }
+
+        .btn-breakdown { margin-top: 10px; background: rgba(59, 130, 246, 0.1); color: var(--primary-light); border: none; width: 100%; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+
+        /* Day List */
+        .day-list-header { padding: 0 20px; margin-bottom: 12px; font-size: 16px; font-weight: 700; display: flex; justify-content: space-between; }
+        .days-container { padding: 0 20px; display: flex; flex-direction: column; gap: 10px; }
+        .day-row { background: var(--card-bg); padding: 10px 16px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--shadow-sm); }
+        .day-info { display: flex; align-items: center; gap: 12px; width: 100px; }
+        .day-date { font-size: 20px; font-weight: 700; color: var(--primary); }
+        .day-name { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+        .day-input-wrapper input { width: 70px; height: 40px; text-align: center; border: 2px solid var(--border); border-radius: 8px; font-size: 16px; font-weight: 600; outline: none; transition: 0.3s; }
+        .day-running-total { width: 60px; text-align: right; font-size: 14px; font-weight: 600; color: var(--text-muted); }
+
+        /* Modals */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
+        .modal { background: var(--card-bg); width: 100%; max-width: 400px; border-radius: 20px; padding: 24px; box-shadow: var(--shadow-lg); }
+        
+        /* Bottom Sheet */
+        .bottom-sheet-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 999; opacity: 0; visibility: hidden; transition: 0.3s; }
+        .bottom-sheet { position: fixed; bottom: -100%; left: 0; right: 0; background: var(--card-bg); border-top-left-radius: 24px; border-top-right-radius: 24px; padding: 24px; z-index: 1000; transition: bottom 0.4s; }
+        .bottom-sheet.active { bottom: 0; }
+        .bottom-sheet-overlay.active { opacity: 1; visibility: visible; }
+        .breakdown-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--border); font-size: 15px; }
+        .breakdown-row.total { font-weight: 700; font-size: 18px; color: var(--primary); border: none; padding-top: 16px; }
+    </style>
+</head>
+<body>
+
+    <!-- Loading Screen -->
+    <div id="loadingScreen" style="display: flex;">
+        <div class="spinner"></div>
+        <h2>দয়া করে অপেক্ষা করুন...</h2>
+    </div>
+
+    <!-- Auth Screen (Login/Signup) -->
+    <div id="authScreen" class="auth-container">
+        <div class="auth-card">
+            <h1>আমার OT ডায়েরি</h1>
+            <p>অনলাইন ডাটাবেজ সিস্টেম</p>
+            
+            <div class="auth-tabs">
+                <div class="auth-tab active" id="tabLogin" onclick="window.switchTab('login')">লগইন</div>
+                <div class="auth-tab" id="tabSignup" onclick="window.switchTab('signup')">নতুন অ্যাকাউন্ট</div>
+            </div>
+
+            <div class="input-group">
+                <label>আপনার ID No (আইডি নম্বর)</label>
+                <input type="text" id="authId" placeholder="উদাঃ 12345">
+            </div>
+            <div class="input-group">
+                <label>পাসওয়ার্ড (Password)</label>
+                <input type="password" id="authPass" placeholder="কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড">
+            </div>
+
+            <button class="btn-primary" id="authBtn" onclick="window.handleAuth()">লগইন করুন</button>
+            <div class="error-msg" id="authError"></div>
+        </div>
+    </div>
+
+    <!-- Main App Screen -->
+    <div id="appScreen">
+        <header class="header">
+            <div>
+                <h1>আমার OT ডায়েরি</h1>
+                <p id="greetingName">হ্যালো!</p>
+                <div class="id-badge">ID: <span id="displayIdNo">----</span></div>
+            </div>
+            <button class="logout-btn" onclick="window.logout()">Logout</button>
+        </header>
+
+        <div class="controls">
+            <div style="display: flex; gap: 8px;">
+                <select id="monthSelect" onchange="window.changeDate()"></select>
+                <select id="yearSelect" onchange="window.changeDate()"></select>
+            </div>
+            <button class="logout-btn" style="background:var(--primary-light)" onclick="window.openSettings()">প্রোফাইল</button>
+        </div>
+
+        <div class="dashboard">
+            <div class="card card-full">
+                <div class="card-title">সর্বমোট বেতন (Final Salary)</div>
+                <div class="card-value salary" id="displayFinalSalary">৳ 0.00</div>
+                <button class="btn-breakdown" onclick="window.openBreakdown()">হিসাব দেখুন (Breakdown)</button>
+            </div>
+            <div class="card">
+                <div class="card-title">মোট OT (Total OT)</div>
+                <div class="card-value" id="displayTotalOT">0 <span style="font-size: 14px; color:var(--text-muted)">ঘণ্টা</span></div>
+            </div>
+            <div class="card">
+                <div class="card-title">OT আয় (OT Earnings)</div>
+                <div class="card-value" id="displayOTEarnings" style="color:var(--text-dark)">৳ 0.00</div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 5px;" id="otRateDisplay">Rate: 0.00/hr</div>
+            </div>
+        </div>
+
+        <div class="day-list-header">
+            <span>দৈনিক এন্ট্রি</span>
+            <span style="font-size: 12px; color: var(--text-muted);">রানিং টোটাল</span>
+        </div>
+
+        <div class="days-container" id="daysContainer"></div>
+    </div>
+
+    <!-- Profile Setup Modal -->
+    <div class="modal-overlay" id="setupModal">
+        <div class="modal">
+            <h2 style="color:var(--primary); margin-bottom:10px;">আপনার প্রোফাইল</h2>
+            
+            <div class="input-group">
+                <label>আপনার নাম (Name)</label>
+                <input type="text" id="setupName" placeholder="উদাঃ রহিম ইসলাম">
+            </div>
+            <div class="input-group">
+                <label>মূল বেতন (Basic Salary)</label>
+                <input type="number" id="setupBasic" placeholder="উদাঃ 14549">
+            </div>
+            <div class="input-group">
+                <label>ভাতা (Allowance)</label>
+                <input type="number" id="setupAllowance" placeholder="উদাঃ 725">
+            </div>
+            <div class="input-group">
+                <label>OT রেট/ঘণ্টা (OT Rate)</label>
+                <input type="number" id="setupRate" placeholder="উদাঃ 77.56" step="0.01">
+            </div>
+            <button class="btn-primary" onclick="window.saveProfile()">সংরক্ষণ করুন (Save)</button>
+        </div>
+    </div>
+
+    <!-- Breakdown Bottom Sheet -->
+    <div class="bottom-sheet-overlay" id="breakdownOverlay" onclick="window.closeBreakdown()"></div>
+    <div class="bottom-sheet" id="breakdownSheet">
+        <div style="width: 40px; height: 5px; background: var(--border); border-radius: 10px; margin: 0 auto 20px auto;"></div>
+        <h3 style="margin-bottom: 20px; color: var(--primary);">বেতনের পূর্ণাঙ্গ হিসাব</h3>
+        <div class="breakdown-row"><span>মূল বেতন (Basic)</span><span id="bdBasic">৳ 0.00</span></div>
+        <div class="breakdown-row"><span>ভাতা (Allowance)</span><span id="bdAllowance">৳ 0.00</span></div>
+        <div class="breakdown-row" style="color: var(--text-muted); font-size: 13px;">
+            <span><span id="bdOTHours">0</span> ঘণ্টা × <span id="bdOTRate">0.00</span> টাকা</span>
+        </div>
+        <div class="breakdown-row"><span>OT আয়</span><span id="bdOTEarnings">৳ 0.00</span></div>
+        <div class="breakdown-row total"><span>সর্বমোট (Total)</span><span id="bdTotal">৳ 0.00</span></div>
+    </div>
+
+    <!-- Firebase SDK Setup -->
+    <script type="module">
+        // Import Firebase Functions via CDN
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        // আপনার নতুন প্রজেক্টের Firebase কনফিগারেশন
+        const firebaseConfig = {
+            apiKey: "AIzaSyCk_dUOQL9nckWCxExTab6y4GHgiKBeIyA",
+            authDomain: "ot-tajul.firebaseapp.com",
+            databaseURL: "https://ot-tajul-default-rtdb.firebaseio.com",
+            projectId: "ot-tajul",
+            storageBucket: "ot-tajul.firebasestorage.app",
+            messagingSenderId: "281838100169",
+            appId: "1:281838100169:web:b1a1fe8076812f40abb718"
+        };
+
+        // Initialize Firebase Apps & Services
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Global State
+        let currentUserId = null;
+        let profileData = null;
+        let otData = {};
+        
+        const bnMonths =['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
+        const bnDays =['রবি', 'সোম', 'মঙ্গল', 'বুধ', 'বৃহস্পতি', 'শুক্র', 'শনি'];
+        
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+        let authMode = 'login'; 
+
+        // --- AUTH LOGIC ---
+        window.switchTab = (mode) => {
+            authMode = mode;
+            document.getElementById('tabLogin').classList.toggle('active', mode === 'login');
+            document.getElementById('tabSignup').classList.toggle('active', mode === 'signup');
+            document.getElementById('authBtn').innerText = mode === 'login' ? 'লগইন করুন' : 'অ্যাকাউন্ট তৈরি করুন';
+            document.getElementById('authError').innerText = '';
+        };
+
+        window.handleAuth = async () => {
+            const idNo = document.getElementById('authId').value.trim();
+            const pass = document.getElementById('authPass').value.trim();
+            const errorDiv = document.getElementById('authError');
+            
+            if(!idNo || !pass) return errorDiv.innerText = "দয়া করে ID এবং Password দিন!";
+            if(pass.length < 6) return errorDiv.innerText = "পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে!";
+
+            // Convert ID to a fake email for Firebase Auth
+            const email = `${idNo}@otdiary.app`;
+            
+            try {
+                errorDiv.innerText = "অপেক্ষা করুন...";
+                if(authMode === 'login') {
+                    await signInWithEmailAndPassword(auth, email, pass);
+                } else {
+                    await createUserWithEmailAndPassword(auth, email, pass);
+                }
+            } catch (error) {
+                console.error(error);
+                if(error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') {
+                    errorDiv.innerText = "ভুল ID বা Password!";
+                } else if(error.code === 'auth/email-already-in-use') {
+                    errorDiv.innerText = "এই ID দিয়ে আগেই অ্যাকাউন্ট খোলা হয়েছে!";
+                } else {
+                    errorDiv.innerText = "একটি সমস্যা হয়েছে। আবার চেষ্টা করুন। (" + error.code + ")";
+                }
+            }
+        };
+
+        window.logout = () => {
+            signOut(auth);
+        };
+
+        // --- AUTH STATE LISTENER ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                document.getElementById('authScreen').style.display = 'none';
+                document.getElementById('loadingScreen').style.display = 'flex';
+                
+                try {
+                    // Fetch User Profile from Firestore
+                    const docRef = doc(db, "users", currentUserId);
+                    const docSnap = await getDoc(docRef);
+                    
+                    if (docSnap.exists()) {
+                        profileData = docSnap.data();
+                        initApp();
+                    } else {
+                        // New User -> Show Setup Modal
+                        document.getElementById('loadingScreen').style.display = 'none';
+                        document.getElementById('appScreen').style.display = 'block';
+                        document.getElementById('setupModal').style.display = 'flex';
+                    }
+                } catch (error) {
+                    console.error("Firestore Error:", error);
+                    alert("ডাটাবেজ এক্সেস করতে সমস্যা হচ্ছে। ফায়ারবেস ডাটাবেজ Rules চেক করুন!");
+                    signOut(auth);
+                }
+            } else {
+                currentUserId = null;
+                profileData = null;
+                document.getElementById('loadingScreen').style.display = 'none';
+                document.getElementById('appScreen').style.display = 'none';
+                document.getElementById('authScreen').style.display = 'flex';
+            }
+        });
+
+        // --- APP LOGIC ---
+        function initSelectors() {
+            const mSelect = document.getElementById('monthSelect');
+            const ySelect = document.getElementById('yearSelect');
+            mSelect.innerHTML = ''; ySelect.innerHTML = '';
+            
+            bnMonths.forEach((m, i) => mSelect.options.add(new Option(m, i)));
+            mSelect.value = currentMonth;
+
+            for(let y = currentYear - 2; y <= currentYear + 2; y++) ySelect.options.add(new Option(y, y));
+            ySelect.value = currentYear;
+        }
+
+        async function initApp() {
+            document.getElementById('loadingScreen').style.display = 'none';
+            document.getElementById('appScreen').style.display = 'block';
+            
+            const rawId = auth.currentUser.email.split('@')[0];
+            document.getElementById('greetingName').innerText = `হ্যালো, ${profileData.name}!`;
+            document.getElementById('displayIdNo').innerText = rawId;
+            document.getElementById('otRateDisplay').innerText = `Rate: ${profileData.rate}/hr`;
+            
+            initSelectors();
+            await loadMonthData();
+        }
+
+        window.changeDate = async () => {
+            currentMonth = parseInt(document.getElementById('monthSelect').value);
+            currentYear = parseInt(document.getElementById('yearSelect').value);
+            await loadMonthData();
+        };
+
+        async function loadMonthData() {
+            const key = `${currentYear}-${currentMonth}`;
+            
+            // Fetch this month's OT from Firestore
+            const otRef = doc(db, "users", currentUserId, "otData", key);
+            const otSnap = await getDoc(otRef);
+            
+            if(otSnap.exists()) {
+                otData[key] = otSnap.data();
+            } else {
+                otData[key] = {};
+            }
+            
+            renderCalendar(key);
+            calculateTotals(key);
+        }
+
+        function renderCalendar(monthKey) {
+            const container = document.getElementById('daysContainer');
+            container.innerHTML = '';
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            
+            for(let i = 1; i <= daysInMonth; i++) {
+                const dayOfWeek = new Date(currentYear, currentMonth, i).getDay();
+                const savedValue = otData[monthKey][i] !== undefined ? otData[monthKey][i] : '';
+                
+                let bgClass = 'var(--low-ot)';
+                if(savedValue >= 4) bgClass = 'var(--high-ot)';
+                else if(savedValue >= 2) bgClass = 'var(--med-ot)';
+
+                const row = document.createElement('div');
+                row.className = 'day-row';
+                row.innerHTML = `
+                    <div class="day-info">
+                        <span class="day-date">${i}</span>
+                        <span class="day-name">${bnDays[dayOfWeek]}</span>
+                    </div>
+                    <div class="day-input-wrapper">
+                        <input type="number" min="0" max="24" step="0.5" value="${savedValue}" 
+                               style="background-color: ${bgClass};"
+                               oninput="window.handleInput(this, ${i})">
+                    </div>
+                    <div class="day-running-total" id="rt-${i}">-</div>
+                `;
+                container.appendChild(row);
+            }
+        }
+
+        window.handleInput = async (el, day) => {
+            const val = parseFloat(el.value);
+            const key = `${currentYear}-${currentMonth}`;
+
+            if (val >= 4) el.style.backgroundColor = 'var(--high-ot)';
+            else if (val >= 2) el.style.backgroundColor = 'var(--med-ot)';
+            else el.style.backgroundColor = 'var(--low-ot)';
+
+            if(isNaN(val)) delete otData[key][day];
+            else otData[key][day] = val;
+
+            calculateTotals(key);
+
+            // Debounced Save to Firestore
+            clearTimeout(window.saveTimeout);
+            window.saveTimeout = setTimeout(async () => {
+                try {
+                    const docRef = doc(db, "users", currentUserId, "otData", key);
+                    await setDoc(docRef, otData[key]);
+                } catch(e) { console.error("Error saving data: ", e); }
+            }, 1000);
+        };
+
+        function calculateTotals(key) {
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            let runningTotal = 0;
+
+            for(let i = 1; i <= daysInMonth; i++) {
+                const val = parseFloat(otData[key][i]) || 0;
+                runningTotal += val;
+                const rtDisplay = document.getElementById(`rt-${i}`);
+                if(rtDisplay) rtDisplay.innerText = runningTotal > 0 ? `${runningTotal}h` : '-';
+            }
+
+            const earnings = runningTotal * profileData.rate;
+            const finalSal = earnings + profileData.basic + profileData.allowance;
+
+            document.getElementById('displayTotalOT').innerHTML = `${runningTotal} <span style="font-size: 14px; color:var(--text-muted)">ঘণ্টা</span>`;
+            document.getElementById('displayOTEarnings').innerText = `৳ ${earnings.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+            document.getElementById('displayFinalSalary').innerText = `৳ ${finalSal.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+
+            document.getElementById('bdBasic').innerText = `৳ ${profileData.basic}`;
+            document.getElementById('bdAllowance').innerText = `৳ ${profileData.allowance}`;
+            document.getElementById('bdOTHours').innerText = runningTotal;
+            document.getElementById('bdOTRate').innerText = profileData.rate;
+            document.getElementById('bdOTEarnings').innerText = `৳ ${earnings.toFixed(2)}`;
+            document.getElementById('bdTotal').innerText = `৳ ${finalSal.toFixed(2)}`;
+        }
+
+        // --- PROFILE SETTINGS ---
+        window.saveProfile = async () => {
+            const name = document.getElementById('setupName').value || 'ইউজার';
+            const basic = parseFloat(document.getElementById('setupBasic').value) || 0;
+            const allowance = parseFloat(document.getElementById('setupAllowance').value) || 0;
+            const rate = parseFloat(document.getElementById('setupRate').value) || 0;
+
+            profileData = { name, basic, allowance, rate };
+            
+            try {
+                document.getElementById('setupModal').style.display = 'none';
+                document.getElementById('loadingScreen').style.display = 'flex';
+                
+                // Save to Firestore
+                await setDoc(doc(db, "users", currentUserId), profileData);
+                
+                initApp();
+            } catch(e) {
+                alert("প্রোফাইল সেভ করতে সমস্যা হয়েছে! ফায়ারবেস Rules ঠিক আছে কিনা চেক করুন।");
+                console.error(e);
+            }
+        };
+
+        window.openSettings = () => {
+            if(profileData) {
+                document.getElementById('setupName').value = profileData.name;
+                document.getElementById('setupBasic').value = profileData.basic;
+                document.getElementById('setupAllowance').value = profileData.allowance;
+                document.getElementById('setupRate').value = profileData.rate;
+            }
+            document.getElementById('setupModal').style.display = 'flex';
+        };
+
+        // UI toggles
+        window.openBreakdown = () => { document.getElementById('breakdownSheet').classList.add('active'); document.getElementById('breakdownOverlay').classList.add('active'); };
+        window.closeBreakdown = () => { document.getElementById('breakdownSheet').classList.remove('active'); document.getElementById('breakdownOverlay').classList.remove('active'); };
+    </script>
+</body>
+</html>
